@@ -1,7 +1,8 @@
-from flask import Flask
+from flask import Flask, request, make_response
 from environs import Env
 from os import environ
 import os
+from http import HTTPStatus
 
 from kenzie.image import download_dir_zip, download_file, list_all_files, list_all_files_by_extension, upload_image
 
@@ -28,8 +29,14 @@ def download(filename: str):
 
 
 @app.get('/download-zip')
-def download_dir_as_zip():
-    return download_dir_zip()
+def download_dir_as_zip(*args):
+    if request.args:
+        file_extension = request.args.get('file_extension')
+        compression_ratio = request.args.get('compression_ratio')
+
+        return download_dir_zip(file_extension, compression_ratio)
+
+    return make_response('No query params defined.', HTTPStatus.NOT_FOUND)
 
 
 @app.get('/files')
