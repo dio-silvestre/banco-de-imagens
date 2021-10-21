@@ -8,6 +8,7 @@ from kenzie.image import download_dir_zip, download_file, list_all_files, list_a
 
 
 app = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024
 
 env = Env()
 env.read_env()
@@ -15,12 +16,9 @@ env.read_env()
 files_directory = environ.get('FILES_DIRECTORY')
 allowed_extensions = environ.get('ALLOWED_EXTENSIONS')
 
-try:
-    os.makedirs(files_directory)
-    for file_extensions in allowed_extensions.split(','):
-        os.makedirs(f'{files_directory}/{file_extensions}')
-except FileExistsError:
-    ...
+os.makedirs(files_directory, exist_ok=True)
+for file_extensions in allowed_extensions.split(','):
+    os.makedirs(f'{files_directory}/{file_extensions}', exist_ok=True)
 
 
 @app.get('/download/<string:filename>')
@@ -52,3 +50,9 @@ def list_files_by_extension(extension: str):
 @app.post('/upload')
 def upload():
     return upload_image()
+
+
+@app.errorhandler(413)
+def largefile_error(e):
+    image_size = request.headers.get('Content-Length')
+    return make_response({'msg': f"This file's size ({image_size}B) exceeds the maximum size allowed (1MB)."}, HTTPStatus.REQUEST_ENTITY_TOO_LARGE)

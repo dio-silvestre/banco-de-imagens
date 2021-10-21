@@ -10,7 +10,6 @@ env = Env()
 env.read_env()
 
 allowed_extensions = environ.get('ALLOWED_EXTENSIONS')
-max_content_length = environ.get('MAX_CONTENT_LENGTH')
 
 def is_file_in_directory():
     files_list = []
@@ -54,16 +53,13 @@ def upload_image():
     image_size = request.headers.get('Content-Length')
 
     if image_extension in allowed_extensions:
-        if int(image_size) > int(max_content_length):
-            return make_response({'msg': f"This file's size ({image_size}B) exceeds the maximum size allowed (1MB)."}, HTTPStatus.REQUEST_ENTITY_TOO_LARGE)
+        if image_to_be_uploaded.filename in is_file_in_directory():
+            return make_response({'msg': f"A file with name '{image_to_be_uploaded.filename}' already exists."}, HTTPStatus.CONFLICT)
         else:
-            if image_to_be_uploaded.filename in is_file_in_directory():
-                return make_response({'msg': f"A file with name '{image_to_be_uploaded.filename}' already exists."}, HTTPStatus.CONFLICT)
-            else:
-                filename = secure_filename(image_to_be_uploaded.filename)
-                image_to_be_uploaded.save(os.path.join(f'./images/{image_extension}', filename))
+            filename = secure_filename(image_to_be_uploaded.filename)
+            image_to_be_uploaded.save(os.path.join(f'./images/{image_extension}', filename))
 
-                return make_response({'msg': f"The file '{filename}' was uploaded successfully."}, HTTPStatus.CREATED)
+            return make_response({'msg': f"The file '{filename}' was uploaded successfully."}, HTTPStatus.CREATED)
 
     else:
         return make_response({'msg': f"The extension '{image_extension}' is not supported."}, HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
