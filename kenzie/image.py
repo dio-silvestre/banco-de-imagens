@@ -50,7 +50,6 @@ def list_all_files_by_extension(extension):
 def upload_image():
     image_to_be_uploaded = request.files['file']
     image_extension = image_to_be_uploaded.content_type.split('/')[1]
-    image_size = request.headers.get('Content-Length')
 
     if image_extension in allowed_extensions:
         if image_to_be_uploaded.filename in is_file_in_directory():
@@ -67,7 +66,6 @@ def upload_image():
 
 def download_file(filename):
     image_extension = filename.split('.')[-1]
-    files_directory = os.walk('./images')
 
     if filename not in is_file_in_directory():
         return make_response({'msg': 'File does not exist.'}, HTTPStatus.NOT_FOUND)
